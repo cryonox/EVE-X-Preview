@@ -39,7 +39,10 @@ class Propertys extends TrayMenu {
 
 
     }
-
+    DisableLiveThumbnail {
+        get => This._JSON["global_Settings"]["DisableLiveThumbnail"]
+        set => This._JSON["global_Settings"]["DisableLiveThumbnail"] := value
+    }
     Minimizeclients_Delay {
         get => This._JSON["global_Settings"]["Minimize_Delay"]
         set => This._JSON["global_Settings"]["Minimize_Delay"] := (value < 50 ? "50" : value)

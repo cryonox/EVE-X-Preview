@@ -23,7 +23,6 @@ Class ThumbWindow extends Propertys {
                 "Ptr", ThumbObj["Window"].Hwnd,	; HWND hWnd
                 "Ptr", This.margins,	; MARGINS *pMarInset
                 )   
- 
 
         ;Set The Opacity who is set in the JSON File, its important to set this on the MainWindow and not on the Thumbnail itself
         WinSetTransparent(This.ThumbnailOpacity)
@@ -35,21 +34,20 @@ Class ThumbWindow extends Propertys {
                     This.ThumbnailStartLocation["width"],
                     This.ThumbnailStartLocation["height"]
                 )
-    
 
-        ;#### Register Thumbnail
-        ; gets the EVE Window sizes
-        WinGetClientPos(, , &W, &H, "ahk_id " Win_Hwnd)
+        if (!This.DisableLiveThumbnail) {
 
-        ; These values for the Thumbnails should not be touched
-        ThumbObj["Thumbnail"] := LiveThumb(Win_Hwnd, ThumbObj["Window"].Hwnd)
-        ThumbObj["Thumbnail"].Source := [0, 0, W, H]
-        ThumbObj["Thumbnail"].Destination := [0, 0, This.ThumbnailStartLocation["width"], This.ThumbnailStartLocation["height"]]
-        ThumbObj["Thumbnail"].SourceClientAreaOnly := True
-        ThumbObj["Thumbnail"].Visible := True
-        ThumbObj["Thumbnail"].Opacity := 255
-        ThumbObj["Thumbnail"].Update()
-
+            WinGetClientPos(, , &W, &H, "ahk_id " Win_Hwnd)
+            ThumbObj["Thumbnail"] := LiveThumb(Win_Hwnd, ThumbObj["Window"].Hwnd)
+            ThumbObj["Thumbnail"].Source := [0, 0, W, H]
+            ThumbObj["Thumbnail"].Destination := [0, 0, This.ThumbnailStartLocation["width"], This.ThumbnailStartLocation["height"]]
+            ThumbObj["Thumbnail"].SourceClientAreaOnly := True
+            ThumbObj["Thumbnail"].Visible := True
+            ThumbObj["Thumbnail"].Opacity := 255
+            ThumbObj["Thumbnail"].Update()
+        } else {
+            ThumbObj["Thumbnail"] := { Update: (*) => 0 }
+        }
 
         ;#### Create the Thumbnail TextOverlay
         ;####

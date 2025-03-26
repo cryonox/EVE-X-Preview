@@ -108,7 +108,7 @@
     Global_Settings(visible?) {
         This.S_Gui.Controls.Global_Settings := []
         This.S_Gui.SetFont("s10 w400")
-        This.S_Gui.Controls.Global_Settings.Push This.S_Gui.Add("GroupBox", "x20 y80 h280 w500")
+        This.S_Gui.Controls.Global_Settings.Push This.S_Gui.Add("GroupBox", "x20 y80 h295 w500")
         This.S_Gui.Controls.Global_Settings.Push This.S_Gui.Add("Text", "xp+15 yp+20 Section", "Suspend Hotkeys - Hotkey:")
         This.S_Gui.Controls.Global_Settings.Push This.S_Gui.Add("Text", "xs y+15", "Hotkey activation Scope:")
         This.S_Gui.Controls.Global_Settings.Push This.S_Gui.Add("Text", "xs y+15", "Thumbnail Background Color:")
@@ -117,6 +117,8 @@
         This.S_Gui.Controls.Global_Settings.Push This.S_Gui.Add("Text", "xs y+15", "Thumbnail Snap:")
         This.S_Gui.Controls.Global_Settings.Push This.S_Gui.Add("Text", "xs y+15", "Thumbnail Snap Distance:")
         This.S_Gui.Controls.Global_Settings.Push This.S_Gui.Add("Text", "xs y+15", "Minimize EVE Window Delay:")
+        This.S_Gui.Controls.Global_Settings.Push This.S_Gui.Add("CheckBox", "xs y+15 vDisableLiveThumbnail Checked" This.DisableLiveThumbnail, "Disable Live Thumbnail")
+        This.S_Gui["DisableLiveThumbnail"].OnEvent("Click", (obj, *) => gSettings_EventHandler(obj))
 
         This.S_Gui.Controls.Global_Settings.Push This.S_Gui.Add("Edit", "xs+230 ys-3 w150 Section vSuspend_Hotkeys_Hotkey", This.Suspend_Hotkeys_Hotkey)
         This.S_Gui["Suspend_Hotkeys_Hotkey"].OnEvent("Change", (obj, *) => gSettings_EventHandler(obj))
@@ -206,6 +208,10 @@
             }
             else if (obj.name = "Minimizeclients_Delay") {
                 This.Minimizeclients_Delay := obj.value
+                This.NeedRestart := 1
+            }
+            else if (obj.name = "DisableLiveThumbnail") {
+                This.DisableLiveThumbnail := obj.value
                 This.NeedRestart := 1
             }
             SetTimer(This.Save_Settings_Delay_Timer, -200)
@@ -755,6 +761,7 @@
         This.S_Gui["ThumbnailSnapOn"].value := This.ThumbnailSnap
         This.S_Gui["ThumbnailSnapOff"].value := (This.ThumbnailSnap ? 0 : 1)
         This.S_Gui["ThumbnailSnap_Distance"].value := This.ThumbnailSnap_Distance
+        This.S_Gui["DisableLiveThumbnail"].value := This.DisableLiveThumbnail
 
         ;Client Settings
         This.S_Gui["MinimizeInactiveClients"].value := This.MinimizeInactiveClients
