@@ -286,9 +286,17 @@ Class Main_Class extends ThumbWindow {
             }
         }
 
+        ; Get the current active window's full title and clean title
+        activeWinHwnd := WinExist("A")
+        currentFullTitle := WinGetTitle("A")
+        currentTitle := This.CleanTitle(currentFullTitle)
+
+        ; Check if current window is actually a non-logged client
+        isNonLoggedClient := (currentFullTitle = "EVE" || currentFullTitle = "") && WinExist("ahk_id " activeWinHwnd " ahk_exe " This.EVEExe)
+        
         ; If current window is a non-logged client, cycle through non-logged clients
-        currentTitle := This.CleanTitle(WinGetTitle("A"))
-        if (currentTitle = "" || WinGetTitle("A") = "EVE") {
+        if (isNonLoggedClient) {
+            Index := 0
             if (direction == "ForwardsHotkey") {
                 NonLoggedIndex := (NonLoggedIndex >= nonLoggedClients.Length) ? 1 : NonLoggedIndex + 1
                 if (nonLoggedClients.Length > 0) {
