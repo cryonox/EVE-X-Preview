@@ -270,14 +270,45 @@ Class Main_Class extends ThumbWindow {
     }
 
     ; The method to make it possible to cycle throw the EVE Windows. Used with the Hotkey Groups
-     Cycle_Hotkey_Groups(Arr, direction,*) {
-        static Index := 0 
+    Cycle_Hotkey_Groups(Arr, direction,*) {
+        static Index := 0, NonLoggedIndex := 0
         length := Arr.Length
 
+        ; Get list of all non-logged in clients
+        nonLoggedClients := []
+        for EveHwnd, GuiObj in This.ThumbWindows.OwnProps() {
+            try {
+                title := WinGetTitle("Ahk_Id " EveHwnd)
+                if (title = "EVE" || title = "") {
+                    nonLoggedClients.Push(EveHwnd)
+                }
+            }
+        }
+
+        ; If current window is a non-logged client, cycle through non-logged clients
+        currentTitle := This.CleanTitle(WinGetTitle("A"))
+        if (currentTitle = "" || WinGetTitle("A") = "EVE") {
+            if (direction == "ForwardsHotkey") {
+                NonLoggedIndex := (NonLoggedIndex >= nonLoggedClients.Length) ? 1 : NonLoggedIndex + 1
+                if (nonLoggedClients.Length > 0) {
+                    This.ActivateEVEWindow(nonLoggedClients[NonLoggedIndex])
+                    return
+                }
+            }
+            else if (direction == "BackwardsHotkey") {
+                NonLoggedIndex := (NonLoggedIndex <= 1) ? nonLoggedClients.Length : NonLoggedIndex - 1
+                if (nonLoggedClients.Length > 0) {
+                    This.ActivateEVEWindow(nonLoggedClients[NonLoggedIndex])
+                    return
+                }
+            }
+        }
+
+        ; Otherwise cycle through logged-in clients as before
         if (direction == "ForwardsHotkey") {
             Try
                 Index := (n := IsActiveWinInGroup(This.CleanTitle(WinGetTitle("A")), Arr)) ? n+1 : 1
-              
+          
             if (Index > length)
                 Index := 1
 
@@ -290,7 +321,7 @@ Class Main_Class extends ThumbWindow {
                                 Index := 1
                         }
                     }
-                This.ActivateEVEWindow(,,This.CleanTitle(Arr[Index]))
+                    This.ActivateEVEWindow(,,This.CleanTitle(Arr[Index]))
                 }
             }
         }
@@ -298,6 +329,7 @@ Class Main_Class extends ThumbWindow {
         else if (direction == "BackwardsHotkey") {
             Try
                 Index := (n := IsActiveWinInGroup(This.CleanTitle(WinGetTitle("A")), Arr)) ? n-1 : length
+
             if (Index <= 0)
                 Index := length
 
@@ -734,4 +766,3 @@ Class Main_Class extends ThumbWindow {
         FileAppend(JSON.Dump(This._JSON, , "    "), "EVE-X-Preview.json")
     }
 }
-
