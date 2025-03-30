@@ -387,22 +387,22 @@ Class Main_Class extends ThumbWindow {
     ;This function updates the Thumbnails and hotkeys if the user switches Charakters in the character selection screen 
     EVENameChange(hwnd, title) {
         if (This.ThumbWindows.HasProp(hwnd)) {
-            ; If title is empty (logged out) and we have a last known character, use that
-            if (title = "" && This.LastKnownCharacters.Has(hwnd)) {
+            ; If title is empty or "EVE" (logged out) and we have a last known character, use that
+            if ((title = "" || title = "EVE") && This.LastKnownCharacters.Has(hwnd)) {
                 This.SetThumbnailText[hwnd] := This.LastKnownCharacters[hwnd]
                 return
             }
             
-            ; If we have a valid character name, store it
+            ; If we have a valid character name (not empty and not "EVE"), store it
             if (title != "" && title != "EVE") {
                 This.LastKnownCharacters[hwnd] := title
+                This.SetThumbnailText[hwnd] := title
             }
 
-            This.SetThumbnailText[hwnd] := title
-            ; moves the Window to the saved positions if any stored, a bit of sleep is usfull to give the window time to move before creating the thumbnail
+            ; moves the Window to the saved positions if any stored
             This.RestoreClientPossitions(hwnd, title)
 
-            if (title = "") {
+            if (title = "" || title = "EVE") {
                 ; Keep existing thumbnail, just update text
                 This.SetThumbnailText[hwnd] := This.LastKnownCharacters.Has(hwnd) 
                     ? This.LastKnownCharacters[hwnd] 
@@ -473,25 +473,26 @@ Class Main_Class extends ThumbWindow {
 
     ; Creates a new thumbnail if a new window got created
     EVE_WIN_Created(Win_Hwnd, Win_Title) {
-        ; Moves the Window to the saved possition if any are stored 
-        This.RestoreClientPossitions(Win_Hwnd, Win_Title)        
-        
         ;Creates the Thumbnail and stores the EVE Hwnd in the array
         If !(This.ThumbWindows.HasProp(Win_Hwnd)) {       
             This.ThumbWindows.%Win_Hwnd% := This.Create_Thumbnail(Win_Hwnd, Win_Title)
             This.ThumbHwnd_EvEHwnd[This.ThumbWindows.%Win_Hwnd%["Window"].Hwnd] := Win_Hwnd
 
             ;if the User is in character selection screen show the window always 
-            if (This.ThumbWindows.%Win_Hwnd%["Window"].Title = "") {
-                This.SetThumbnailText[Win_Hwnd] := Win_Title
-                ;if the Title is just "EVE" that means it is in the Charakter selection screen
-                ;in this case show always the Thumbnail 
+            if (Win_Title = "" || Win_Title = "EVE") {
+                ; Check if we have a last known character name
+                if (This.LastKnownCharacters.Has(Win_Hwnd)) {
+                    This.SetThumbnailText[Win_Hwnd] := This.LastKnownCharacters[Win_Hwnd]
+                } else {
+                    This.SetThumbnailText[Win_Hwnd] := "EVE"
+                }
                 This.ShowThumb(Win_Hwnd, "Show")
                 return
             }  
 
-            ;if the user loged in into a Character then move the Thumbnail to the right possition 
+            ;if the user logged in into a Character then move the Thumbnail to the right position 
             else If (This.ThumbnailPositions.Has(Win_Title)) {
+                This.LastKnownCharacters[Win_Hwnd] := Win_Title  ; Store the character name
                 This.SetThumbnailText[Win_Hwnd] := Win_Title
                 rect := This.ThumbnailPositions[Win_Title]                      
                 This.ThumbMove( rect["x"],
