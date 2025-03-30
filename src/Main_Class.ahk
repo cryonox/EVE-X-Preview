@@ -40,6 +40,7 @@ Class Main_Class extends ThumbWindow {
     EventHooks := Map() 
     ThumbWindows := {}
     ThumbHwnd_EvEHwnd := Map()
+    LastKnownCharacters := Map()  ; New map to store last known character names
 
     __New() { 
 
@@ -386,18 +387,30 @@ Class Main_Class extends ThumbWindow {
     ;This function updates the Thumbnails and hotkeys if the user switches Charakters in the character selection screen 
     EVENameChange(hwnd, title) {
         if (This.ThumbWindows.HasProp(hwnd)) {
+            ; If title is empty (logged out) and we have a last known character, use that
+            if (title = "" && This.LastKnownCharacters.Has(hwnd)) {
+                This.SetThumbnailText[hwnd] := This.LastKnownCharacters[hwnd]
+                return
+            }
+            
+            ; If we have a valid character name, store it
+            if (title != "" && title != "EVE") {
+                This.LastKnownCharacters[hwnd] := title
+            }
+
             This.SetThumbnailText[hwnd] := title
             ; moves the Window to the saved positions if any stored, a bit of sleep is usfull to give the window time to move before creating the thumbnail
             This.RestoreClientPossitions(hwnd, title)
 
             if (title = "") {
-                This.EvEWindowDestroy(hwnd, title)
-                This.EVE_WIN_Created(hwnd,title)
+                ; Keep existing thumbnail, just update text
+                This.SetThumbnailText[hwnd] := This.LastKnownCharacters.Has(hwnd) 
+                    ? This.LastKnownCharacters[hwnd] 
+                    : "EVE"
+                return
             }
 
             else If (This.ThumbnailPositions.Has(title)) {
-                This.EvEWindowDestroy(hwnd, title)
-                This.EVE_WIN_Created(hwnd,title)
                 rect := This.ThumbnailPositions[title]  
                 This.ShowThumb(hwnd, "Hide")              
                 This.ThumbMove( rect["x"],
@@ -414,7 +427,7 @@ Class Main_Class extends ThumbWindow {
                 } 
             }
             This.BorderActive := 0
-            This.RegisterHotkeys(title, hwnd)
+            This.RegisterHotkeys(This.LastKnownCharacters.Has(hwnd) ? This.LastKnownCharacters[hwnd] : title, hwnd)
         }
     }
 
@@ -499,29 +512,16 @@ Class Main_Class extends ThumbWindow {
     }
 
     ;if a EVE Window got closed this destroyes the Thumbnail and frees the memory.
-    EvEWindowDestroy(hwnd?, WinTitle?) {
-        if (IsSet(hwnd) && This.ThumbWindows.HasProp(hwnd)) {
-            for k, v in This.ThumbWindows.Clone().%hwnd% {
-                if (K = "Thumbnail")
-                    continue
-                v.Destroy()
-                ;This.ThumbWindows.%Win_Hwnd%.Delete()
-            }
-            This.ThumbWindows.DeleteProp(hwnd)
-            Return
-        }
-        ;If a EVE Windows get destroyed 
-        for Win_Hwnd,v in This.ThumbWindows.Clone().OwnProps() {
-            if (!WinExist("Ahk_Id " Win_Hwnd)) {
-                for k,v in This.ThumbWindows.Clone().%Win_Hwnd% {
-                    if (K = "Thumbnail")
-                        continue
+    EvEWindowDestroy(hwnd?, title?) {
+        if (IsSet(hwnd)) {
+            This.LastKnownCharacters.Delete(hwnd)  ; Clean up the mapping when window is destroyed
+            if (This.ThumbWindows.HasProp(hwnd)) {
+                for k, v in This.ThumbWindows.%hwnd% {
                     v.Destroy()
                 }
-                This.ThumbWindows.DeleteProp(Win_Hwnd)        
+                This.ThumbWindows.DeleteProp(hwnd)
             }
         }
-        This.DestroyThumbnailsToggle := 1
     }
     
     ActivateEVEWindow(hwnd?,ThisHotkey?, title?) {   
