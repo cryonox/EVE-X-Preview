@@ -97,10 +97,20 @@ Class Main_Class extends ThumbWindow {
 
     HandleMainTimer() {
         static HideShowToggle := 0, WinList := {}
-        try
+        try 
             WinList := WinGetList(This.EVEExe)
         Catch 
             return
+        
+
+        ; Clean up any thumbnails whose EVE windows no longer exist
+        for hwnd in This.ThumbWindows.OwnProps() {
+            if !WinExist("ahk_id " hwnd) {
+                This.EvEWindowDestroy(hwnd)
+                continue
+            }
+        }
+
         ; If any EVE Window exist
         if (WinList.Length) {
             try {
@@ -523,11 +533,24 @@ Class Main_Class extends ThumbWindow {
     ;if a EVE Window got closed this destroyes the Thumbnail and frees the memory.
     EvEWindowDestroy(hwnd?, title?) {
         if (IsSet(hwnd)) {
-            This.LastKnownCharacters.Delete(hwnd)  ; Clean up the mapping when window is destroyed
+            ; Clean up the thumbnail GUI objects
             if (This.ThumbWindows.HasProp(hwnd)) {
-                for k, v in This.ThumbWindows.%hwnd% {
-                    v.Destroy()
+                ; Remove from ThumbHwnd_EvEHwnd mapping
+                for thumbHwnd, eveHwnd in This.ThumbHwnd_EvEHwnd {
+                    if (eveHwnd = hwnd) {
+                        This.ThumbHwnd_EvEHwnd.Delete(thumbHwnd)
+                    }
                 }
+                
+                ; Destroy all GUI elements
+                for k, v in This.ThumbWindows.%hwnd% {
+                            v.Destroy()
+                }
+                
+                ; Remove from LastKnownCharacters
+                This.LastKnownCharacters.Delete(hwnd)
+                
+                ; Finally remove from ThumbWindows
                 This.ThumbWindows.DeleteProp(hwnd)
             }
         }
